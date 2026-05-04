@@ -2,6 +2,7 @@
 import { useState } from"react";
 // SeachBarという部品をSearchBarファイルから借りてくる
 import SearchBar from "./SearchBar";
+import PokemonCard from "./PokemonCard";
 // appという関数
 // 入力欄の名前のポケモンのデータを探してきて、画像名前攻撃を表示する。
 function App(){
@@ -14,6 +15,8 @@ function App(){
   const [loading,setLoading]=useState(false);
 //  エラーが起こるとエラーメッセージを表示。初期はエラーなし
   const [error,setError]=useState(null);
+  // 選択されたポケモンたちを記憶する箱、追加されたら自動で画面にも反映。最初は誰もいないので、空の配列（[]）
+  const [selected,setSelected]=useState([]);
    // ポケモンのデータを探してくる関数。「asyncを宣言することででawait（処理が終わるまで待つ＜次の行に進まない＞）を使える」
   async function searchPokemon(){
     // ユーザーの入力欄への入力が空なら、次のコードへ進まず進行を返す（通信しない）
@@ -52,6 +55,16 @@ function App(){
       // 通信終了。（loadingの状態をfalseにして画面を更新）
       setLoading(false);
   }
+  // selectPokemonという道具。検索したポケモンのデータを材料（引数）にもらう
+  function selectPokemon(pokemon){
+    // 選ばれたポケモンが２以上なら以下は実行しない。
+    if(selected.length>=2)return;
+    // すでに選ばれたポケモンのリストの中に、some()の条件に合うポケモンがいるかチェック
+    // 「p=pokemon」すでに選ばれたポケモンの中に新しく選ばれたポケモンと同じ名前があるかチェック。すでにいたらリストに追加しない（return）
+    if(selected.some(p=>p.name===pokemon.name))return;
+    // setSelected関数の実行（画面の更新）。今のselectedリストの中身を全部出して、新しいポケモンを追加して新しいリストを作る。その後画面の更新。
+    setSelected([...selected,pokemon]);
+  }
   // 画面表示の設計図。上記のsearchPokemonをもとに、場合に応じて、「入力待ち」、「読み込み中」、「検索結果」の画面を表示する。
   return(
     // 全体の外枠（すべての画面の部品が入っている大きな箱）
@@ -74,21 +87,24 @@ function App(){
      {error&&<p style={{color:"red"}}>{error}</p>}
       {/* 探してきたポケモンのデータがあれば、以下を画面に表示 */}
      {pokemon&&(
-      // 検索結果の箱。大きな箱の中に入っている。
+      // PokemonCard部品の、pokemonにはpokemnが入る　onSelectにはselectPokemonが入る。propsの受け渡し。
+      <PokemonCard pokemon={pokemon} onSelect={selectPokemon}/> 
+     )}
+     {/* 選択されたポケモンが、０を超えていれば（ポケモンが1匹でも選ばれていれば）、以下を表示。 */}
+     {selected.length>0&&(
+      // 表示部分
       <div>
-      {/* 探してきたポケモンの名前を表示。 */}
-        <h2>{pokemon.name}</h2>
-        {/* 探してきたポケモンの画像を表示。「pokemon.sprites=ポケモンＡＰＩが提供する画像のデータ」「.front_default=デフォルトの正面画像 」
-        pokemonのspritesのfront_default
-        pokemonという探してきたデータの塊が入っている箱から、spritesという画像データの袋を探して、その中の正面画像を取り出す。
-        「alt=代替テキスト」画像が読み込めなかったら名前のテキストを表示、読み上げソフトがポケモンの画像があると表示、そのぽけもんの画像が表示されているとわかる。*/}
-        <img src={pokemon.sprites.front_default} alt={pokemon.name} />
-        {/* ポケモンのHP,攻撃を表示。APIからかのデータは配列なので、[0]番目でHP、[1]番目で攻撃を表示する。 
-        stats=数値データ（ポケモンの能力値リスト）　base_stat=リストの中の基礎ステータス値（このラベルから数値を探す）
-        ＡＰＩのデータの中から、ほしいデータ（ＨＰ，攻撃）を探すための書き方。*/}
-        <p>HP: {pokemon.stats[0].base_stat}</p>
-        <p>攻撃: {pokemon.stats[1].base_stat}</p>
-      </div>
+        <h2>選択中のポケモン</h2>
+        {/* 選択されたリストの中身すべてに加工をしていく。「p=ポケモン一匹一匹」「iはその管理番号」
+        ポケモンの名前を管理番号順に画面に並べる */}
+        {selected.map((p,i)=>(
+          <span key={i}>{p.name} </span>
+        ))}
+      </div> 
+     )}
+     {/* 選ばれたポケモンがちょうど2匹ならバトル開始ボタンを表示。 */}
+     {selected.length===2&&(
+      <button>バトル開始</button>
      )}
     </div>
   );

@@ -3,7 +3,7 @@ function PokemonCard({pokemon,onSelect}){
     // 以下の設計図を返す。
     return(
         // PokemonCard全体のデザインの設定
-        <div style={{border:"1px solid #ccc",padding:"12px",margin:"8px",display:"inline-block"}}>
+        <div className="card">
             {/* 見出し、ポケモンの名前の表示 */}
             <h2>{pokemon.name}</h2>
             {/* APIからのデータの中から指定のポケモンの画像を表示。PC達にも、検索したポケモンの画像を表示しているとわかるようにする */}
